@@ -24,6 +24,11 @@ except ImportError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
+import numpy as np
+import gdal
+import qimage2ndarray
+
+
 import resources
 # Add internal libs
 dir_name = os.path.abspath(os.path.dirname(__file__))
@@ -329,6 +334,16 @@ class MainWindow(QMainWindow, WindowMixin):
         self.labelList.customContextMenuRequested.connect(
             self.popLabelListMenu)
 
+        ############object detection actions#############
+        general_detection = action('General\nDetection', self.general,
+                                   None, 'general', u'General Detection', enabled=False)
+        ship_detection = action('Ship\nDetection', self.ship,
+                                None, 'ship', u'Ship Detection', enabled=False)
+        plane_detection = action('Plane\nDetection', self.plane,
+                                None, 'plane', u'Plane Detection', enabled=False)
+        vehicle_detection = action('Vehicle\nDetection', self.vehicle,
+                                 None, 'vehicle', u'Vehicle Detection', enabled=False)
+
         # Store actions for further handling.
         self.actions = struct(save=save, saveAs=saveAs, open=open, close=close,
                               lineColor=color1, fillColor=color2,
@@ -348,7 +363,11 @@ class MainWindow(QMainWindow, WindowMixin):
                                                delete, shapeLineColor, shapeFillColor),
                               onLoadActive=(
                                   close, create, createMode, editMode),
-                              onShapesPresent=(saveAs, hideAll, showAll))
+                              onShapesPresent=(saveAs, hideAll, showAll),
+                              general=general_detection,
+                              ship=ship_detection,
+                              plane=plane_detection ,
+                              vehicle=vehicle_detection)
 
         self.menus = struct(
             file=self.menu('&File'),
@@ -376,15 +395,6 @@ class MainWindow(QMainWindow, WindowMixin):
             action('&Move here', self.moveShape)))
 
         self.tools = self.toolbar('Tools')
-
-        general_detection = action('General\nDetection', self.general,
-                                   None, 'general', u'General Detection', enabled=False)
-        ship_detection = action('Ship\nDetection', self.ship,
-                                None, 'ship', u'Ship Detection', enabled=False)
-        plane_detection = action('Plane\nDetection', self.plane,
-                                None, 'plane', u'Plane Detection', enabled=False)
-        vehicle_detection = action('Vehicle\nDetection', self.plane,
-                                 None, 'vehicle', u'Vehicle Detection', enabled=False)
         self.actions.beginner = (
             open, opendir, openNextImg, openPrevImg, verify, save, None,
             ##detection menu##
@@ -540,14 +550,26 @@ class MainWindow(QMainWindow, WindowMixin):
         self.actions.save.setEnabled(False)
         self.actions.create.setEnabled(True)
         self.actions.createRo.setEnabled(True)
+        self.actions.general.setEnabled(True)
+        self.actions.ship.setEnabled(True)
+        self.actions.plane.setEnabled(True)
+        self.actions.vehicle.setEnabled(True)
 
     def enableCreate(self,b):
         self.isEnableCreate = not b
         self.actions.create.setEnabled(self.isEnableCreate)
+        self.actions.general.setEnabled(self.isEnableCreate)
+        self.actions.ship.setEnabled(self.isEnableCreate)
+        self.actions.plane.setEnabled(self.isEnableCreate)
+        self.actions.vehicle.setEnabled(self.isEnableCreate)
 
     def enableCreateRo(self,b):
         self.isEnableCreateRo = not b
         self.actions.createRo.setEnabled(self.isEnableCreateRo)
+        self.actions.general.setEnabled(True)
+        self.actions.ship.setEnabled(True)
+        self.actions.plane.setEnabled(True)
+        self.actions.vehicle.setEnabled(True)
 
     def toggleActions(self, value=True):
         """Enable/Disable widgets which depend on an opened image."""
@@ -603,6 +625,10 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.canDrawRotatedRect = False
         self.actions.create.setEnabled(False)
         self.actions.createRo.setEnabled(False)
+        self.actions.general.setEnabled(False)
+        self.actions.ship.setEnabled(False)
+        self.actions.plane.setEnabled(False)
+        self.actions.vehicle.setEnabled(False)
 
     # create Rotated Rect
     def createRoShape(self):
@@ -611,6 +637,10 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.canDrawRotatedRect = True
         self.actions.create.setEnabled(False)
         self.actions.createRo.setEnabled(False)
+        self.actions.general.setEnabled(False)
+        self.actions.ship.setEnabled(False)
+        self.actions.plane.setEnabled(False)
+        self.actions.vehicle.setEnabled(False)
 
     def toggleDrawingSensitive(self, drawing=True):
         """In the middle of drawing, toggling between modes should be disabled."""
@@ -622,6 +652,10 @@ class MainWindow(QMainWindow, WindowMixin):
             self.canvas.restoreCursor()
             self.actions.create.setEnabled(True)
             self.actions.createRo.setEnabled(True)
+            self.actions.general.setEnabled(True)
+            self.actions.ship.setEnabled(True)
+            self.actions.plane.setEnabled(True)
+            self.actions.vehicle.setEnabled(True)
             
 
     def toggleDrawMode(self, edit=True):
@@ -840,6 +874,10 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.canvas.setEditing(True)
                 self.actions.create.setEnabled(self.isEnableCreate)
                 self.actions.createRo.setEnabled(self.isEnableCreateRo)
+                self.actions.general.setEnabled(self.isEnableCreate)
+                self.actions.ship.setEnabled(self.isEnableCreate)
+                self.actions.plane.setEnabled(self.isEnableCreate)
+                self.actions.vehicle.setEnabled(self.isEnableCreate)
             else:
                 self.actions.editMode.setEnabled(True)
             self.setDirty()
@@ -885,10 +923,48 @@ class MainWindow(QMainWindow, WindowMixin):
         for item, shape in self.itemsToShapes.items():
             item.setCheckState(Qt.Checked if value else Qt.Unchecked)
 
+    def read_gaofen(self,img_file):
+
+        def rescale(band, minval=None, maxval=None):
+            minval = minval if minval is not None else 0
+            maxval = maxval if maxval is not None else 1
+            maxval = maxval if maxval != minval else maxval + 1
+
+            band = 255 * (band.astype(np.float32) - minval) / (maxval - minval)
+            band = np.clip(band, 0, 255).astype(np.uint8)
+            return band
+        percents = [2, 98]
+        src_image = gdal.Open(img_file).ReadAsArray()
+        # 8 bit image: no need to rescale.
+        if src_image.dtype == "uint8":
+            if len(src_image.shape) == 3:
+                return src_image.transpose([1, 2, 0])
+            else:
+                return np.stack([src_image, src_image, src_image],axis=-1).transpose([1, 2, 0])
+        # 16 bit image: rescale to [0,255]
+        elif len(src_image.shape) == 3:  # Shape is [ch, h, w]
+            img_shape = list(src_image.shape)
+            img_shape[0] = 3
+            dst_image = np.zeros(img_shape, np.uint8)
+            for i in range(3):
+                minval = np.percentile(src_image[i], percents[0])
+                maxval = np.percentile(src_image[i], percents[1])
+                dst_image[i] = rescale(src_image[i], minval, maxval)
+            dst_image = dst_image.transpose([1, 2, 0])
+            print(dst_image.shape)
+
+        else:  # Shape is [h, w]
+            minval = np.percentile(src_image[src_image > 0], percents[0])
+            maxval = np.percentile(src_image[src_image > 0], percents[1])
+            dst_image = rescale(src_image, minval, maxval)
+            dst_image = np.stack([dst_image, dst_image, dst_image],axis=-1)
+        return dst_image
+
     def loadFile(self, filePath=None):
         """Load the specified file, or the last opened file if None."""
         self.resetState()
         self.canvas.setEnabled(False)
+        cvimg = None
         if filePath is None:
             filePath = self.settings.get('filename')
 
@@ -917,13 +993,26 @@ class MainWindow(QMainWindow, WindowMixin):
             else:
                 # Load image:
                 # read data first and store for saving into label file.
-                self.imageData = read(unicodeFilePath, None)
+                try:
+                    self.imageData = self.read_gaofen(unicodeFilePath)
+                    cvimg = self.imageData
+                    self.imageData = qimage2ndarray.array2qimage(self.imageData)
+                except:
+                    self.imageData = None
+                    cvimg = None
                 self.labelFile = None
-            image = QImage.fromData(self.imageData)
+                self.canvas.verified = False
+            if isinstance(self.imageData, QImage):
+                image = self.imageData
+            else:
+                image = QImage.fromData(self.imageData)
             if image.isNull():
                 self.errorMessage(u'Error opening file',
                                   u"<p>Make sure <i>%s</i> is a valid image file." % unicodeFilePath)
                 self.status("Error reading %s" % unicodeFilePath)
+                return False
+            if cvimg is None:
+                print("Image reading for CNN has occurred an error.")
                 return False
             self.status("Loaded %s" % os.path.basename(unicodeFilePath))
             self.image = image
