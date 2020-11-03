@@ -1383,22 +1383,23 @@ class MainWindow(QMainWindow, WindowMixin):
     ################Defined for 503###################
     def general(self):
         result = inference(self.general_detector,self.cvimg,is_obb=False)
-        print(result)
         self.parse_result(result)
         self.actions.verify.setEnabled(True)
-        print("general")
 
     def ship(self):
+        result = inference(self.ship_detector, self.cvimg, is_obb=False)
+        self.parse_result(result)
         self.actions.verify.setEnabled(True)
-        print("ship")
 
     def plane(self):
+        result = inference(self.plane_detector, self.cvimg, is_obb=False)
+        self.parse_result(result)
         self.actions.verify.setEnabled(True)
-        print("plane")
 
     def vehicle(self):
+        result = inference(self.vehicle_detector, self.cvimg, is_obb=False)
+        self.parse_result(result)
         self.actions.verify.setEnabled(True)
-        print("vehicle")
 
     def verifyImg(self, _value=False):
         self.actions.verify.setEnabled(False)
