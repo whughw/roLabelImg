@@ -29,17 +29,17 @@ import resources
 dir_name = os.path.abspath(os.path.dirname(__file__))
 libs_path = os.path.join(dir_name, 'libs')
 sys.path.insert(0, libs_path)
-from lib import struct, newAction, newIcon, addActions, fmtShortcut
-from shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
-from canvas import Canvas
-from zoomWidget import ZoomWidget
-from labelDialog import LabelDialog
-from colorDialog import ColorDialog
-from labelFile import LabelFile, LabelFileError
-from toolBar import ToolBar
-from pascal_voc_io import PascalVocReader
-from pascal_voc_io import XML_EXT
-from ustr import ustr
+from libs.lib import struct, newAction, newIcon, addActions, fmtShortcut
+from libs.shape import Shape, DEFAULT_LINE_COLOR, DEFAULT_FILL_COLOR
+from libs.canvas import Canvas
+from libs.zoomWidget import ZoomWidget
+from libs.labelDialog import LabelDialog
+from libs.colorDialog import ColorDialog
+from libs.labelFile import LabelFile, LabelFileError
+from libs.toolBar import ToolBar
+from libs.pascal_voc_io import PascalVocReader
+from libs.pascal_voc_io import XML_EXT
+from libs.ustr import ustr
 
 __appname__ = 'roLabelImg'
 
@@ -248,6 +248,7 @@ class MainWindow(QMainWindow, WindowMixin):
         editMode = action('&Edit\nRectBox', self.setEditMode,
                           'Ctrl+J', 'edit', u'Move and edit Boxs', enabled=False)
 
+
         create = action('Create\nRectBox', self.createShape,
                         'w', 'new', u'Draw a new Box', enabled=False)
 
@@ -375,8 +376,19 @@ class MainWindow(QMainWindow, WindowMixin):
             action('&Move here', self.moveShape)))
 
         self.tools = self.toolbar('Tools')
+
+        general_detection = action('General\nDetection', self.general,
+                                   None, 'general', u'General Detection', enabled=False)
+        ship_detection = action('Ship\nDetection', self.ship,
+                                None, 'ship', u'Ship Detection', enabled=False)
+        plane_detection = action('Plane\nDetection', self.plane,
+                                None, 'plane', u'Plane Detection', enabled=False)
+        vehicle_detection = action('Vehicle\nDetection', self.plane,
+                                 None, 'vehicle', u'Vehicle Detection', enabled=False)
         self.actions.beginner = (
-            open, opendir, openNextImg, openPrevImg, verify, save, None, create, createRo, copy, delete, None,
+            open, opendir, openNextImg, openPrevImg, verify, save, None,
+            ##detection menu##
+            general_detection, ship_detection, plane_detection, vehicle_detection, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
@@ -1291,6 +1303,18 @@ class MainWindow(QMainWindow, WindowMixin):
         self.loadLabels(shapes)
         self.canvas.verified = tVocParseReader.verified
 
+    ################Defined for 503###################
+    def general(self):
+        print("general")
+
+    def ship(self):
+        print("ship")
+
+    def plane(self):
+        print("plane")
+
+    def vehicle(self):
+        print("vehicle")
 
 class Settings(object):
     """Convenience dict-like wrapper around QSettings."""
@@ -1325,6 +1349,7 @@ class Settings(object):
                     # print(e)
                     return value
         return value
+
 
 
 def inverted(color):
