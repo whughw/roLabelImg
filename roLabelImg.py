@@ -233,8 +233,8 @@ class MainWindow(QMainWindow, WindowMixin):
         openPrevImg = action('&Prev Image', self.openPrevImg,
                              'a', 'prev', u'Open Prev')
 
-        verify = action('&Verify Image', self.verifyImg,
-                        'space', 'verify', u'Verify Image')
+        verify = action('&Refine\nResults', self.verifyImg,
+                        None, 'refine', u'Refine Results', enabled=False)
 
         save = action('&Save', self.saveFile,
                       'Ctrl+S', 'save', u'Save labels to file', enabled=False)
@@ -367,7 +367,8 @@ class MainWindow(QMainWindow, WindowMixin):
                               general=general_detection,
                               ship=ship_detection,
                               plane=plane_detection ,
-                              vehicle=vehicle_detection)
+                              vehicle=vehicle_detection,
+                              verify=verify,)
 
         self.menus = struct(
             file=self.menu('&File'),
@@ -396,9 +397,9 @@ class MainWindow(QMainWindow, WindowMixin):
 
         self.tools = self.toolbar('Tools')
         self.actions.beginner = (
-            open, opendir, openNextImg, openPrevImg, verify, save, None,
+            open, opendir, openNextImg, openPrevImg, save, None,
             ##detection menu##
-            general_detection, ship_detection, plane_detection, vehicle_detection, None,
+            general_detection, ship_detection, plane_detection, vehicle_detection, verify, None,
             zoomIn, zoom, zoomOut, fitWindow, fitWidth)
 
         self.actions.advanced = (
@@ -1187,22 +1188,6 @@ class MainWindow(QMainWindow, WindowMixin):
             item = QListWidgetItem(imgPath)
             self.fileListWidget.addItem(item)
 
-    def verifyImg(self, _value=False):
-        # Proceding next image without dialog if having any label
-         if self.filePath is not None:
-            try:
-                self.labelFile.toggleVerify()
-            except AttributeError:
-                # If the labelling file does not exist yet, create if and
-                # re-save it with the verified attribute.
-                self.saveFile()
-                if self.labelFile is not None:
-                    self.labelFile.toggleVerify()
-            if self.labelFile is not None:
-                self.canvas.verified = True
-            self.paintCanvas()
-            self.saveFile()
-
     def openPrevImg(self, _value=False):
         if not self.mayContinue():
             return
@@ -1394,16 +1379,24 @@ class MainWindow(QMainWindow, WindowMixin):
 
     ################Defined for 503###################
     def general(self):
+        self.actions.verify.setEnabled(True)
         print("general")
 
     def ship(self):
+        self.actions.verify.setEnabled(True)
         print("ship")
 
     def plane(self):
+        self.actions.verify.setEnabled(True)
         print("plane")
 
     def vehicle(self):
+        self.actions.verify.setEnabled(True)
         print("vehicle")
+
+    def verifyImg(self, _value=False):
+        self.actions.verify.setEnabled(False)
+        print("refine results")
 
 class Settings(object):
     """Convenience dict-like wrapper around QSettings."""
