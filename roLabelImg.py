@@ -9,24 +9,19 @@ import subprocess
 from functools import partial
 from collections import defaultdict
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ImportError:
-    # needed for py3+qt4
-    # Ref:
-    # http://pyqt.sourceforge.net/Docs/PyQt4/incompatible_apis.html
-    # http://stackoverflow.com/questions/21217399/pyqt4-qtcore-qvariant-object-instead-of-a-string
-    if sys.version_info.major >= 3:
-        import sip
-        sip.setapi('QVariant', 2)
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import numpy as np
 import gdal
 import qimage2ndarray
+
+try:
+    from mmdet.apis import init_detector
+except:
+    from detection.detector_test import init_detector
+    print("Error occurred when importing mmdetection.\nUsing unit test file.")
 
 
 import resources
@@ -45,6 +40,8 @@ from libs.toolBar import ToolBar
 from libs.pascal_voc_io import PascalVocReader
 from libs.pascal_voc_io import XML_EXT
 from libs.ustr import ustr
+
+from detection.inference import inference
 
 __appname__ = 'roLabelImg'
 
@@ -95,6 +92,11 @@ class MainWindow(QMainWindow, WindowMixin):
     def __init__(self, defaultFilename=None, defaultPrefdefClassFile=None):
         super(MainWindow, self).__init__()
         self.setWindowTitle(__appname__)
+
+        ##########init detector for object detection.###########
+        self.__init_detector()
+        self.cvimg = None
+
         # Save as Pascal voc xml
         self.defaultSaveDir = None
         self.usingPascalVocFormat = True
@@ -995,9 +997,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 # Load image:
                 # read data first and store for saving into label file.
                 try:
-                    self.imageData = self.read_gaofen(unicodeFilePath)
-                    cvimg = self.imageData
-                    self.imageData = qimage2ndarray.array2qimage(self.imageData)
+                    cvimg = self.read_gaofen(unicodeFilePath)
+                    self.imageData = qimage2ndarray.array2qimage(cvimg)
                 except:
                     self.imageData = None
                     cvimg = None
@@ -1015,6 +1016,8 @@ class MainWindow(QMainWindow, WindowMixin):
             if cvimg is None:
                 print("Image reading for CNN has occurred an error.")
                 return False
+            else:
+                self.cvimg = cvimg
             self.status("Loaded %s" % os.path.basename(unicodeFilePath))
             self.image = image
             self.filePath = unicodeFilePath
@@ -1118,7 +1121,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.loadFile(filename)
 
     def scanAllImages(self, folderPath):
-        extensions = ['.jpeg', '.jpg', '.png', '.bmp']
+        extensions = ['.jpeg', '.jpg', '.png', '.bmp', '.tif', '.tiff', '.img']
         images = []
 
         for root, dirs, files in os.walk(folderPath):
@@ -1379,6 +1382,9 @@ class MainWindow(QMainWindow, WindowMixin):
 
     ################Defined for 503###################
     def general(self):
+        result = inference(self.general_detector,self.cvimg,is_obb=False)
+        print(result)
+        self.parse_result(result)
         self.actions.verify.setEnabled(True)
         print("general")
 
@@ -1397,6 +1403,44 @@ class MainWindow(QMainWindow, WindowMixin):
     def verifyImg(self, _value=False):
         self.actions.verify.setEnabled(False)
         print("refine results")
+
+    def __init_detector(self):
+        print("[1/4]Initializing General Detection model...")
+        self.general_detector = init_detector("detection/model/general/config.py",
+                                              "detection/model/general/model.pth")
+        print("[2/4]Initializing Ship Detection model...")
+        self.ship_detector = init_detector("detection/model/ship/config.py",
+                                           "detection/model/ship/model.pth")
+        print("[3/4]Initializing Plane Detection model...")
+        self.plane_detector = init_detector("detection/model/plane/config.py",
+                                            "detection/model/plane/model.pth")
+        print("[4/4]Initializing Vehicle Detection model...")
+        self.vehicle_detector = init_detector("detection/model/vehicle/config.py",
+                                              "detection/model/vehicle/model.pth")
+
+    def parse_result(self,result):
+        s = []
+        for obj in result:
+            label = obj["label"]
+            shape = Shape(label=label)
+            xmin, ymin, xmax, ymax = obj["bbox"]
+            points = [[xmin,ymin],[xmax,ymin],[xmax,ymax],[xmin,ymax]]
+            for x, y in points:
+                shape.addPoint(QPointF(x, y))
+            shape.difficult = False
+            shape.direction = obj["rbbox"][-1]
+            shape.isRotated = True
+            shape.close()
+            s.append(shape)
+            self.addLabel(shape)
+            # if line_color:
+            #     shape.line_color = QColor(*line_color)
+            # if fill_color:
+            #     shape.fill_color = QColor(*fill_color)
+
+        self.canvas.loadShapes(s)
+        self.setDirty()
+
 
 class Settings(object):
     """Convenience dict-like wrapper around QSettings."""
