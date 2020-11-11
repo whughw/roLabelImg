@@ -9,6 +9,7 @@ import subprocess
 from functools import partial
 from collections import defaultdict
 
+from PyQt5.Qt import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -16,6 +17,7 @@ from PyQt5.QtWidgets import *
 import numpy as np
 import gdal
 import qimage2ndarray
+import time
 
 try:
     from mmdet.apis import init_detector
@@ -1382,25 +1384,34 @@ class MainWindow(QMainWindow, WindowMixin):
         self.canvas.verified = tVocParseReader.verified
 
     ################Defined for 503###################
+    def progress_bar(self):
+        progress = QProgressDialog("正在检测子图 ...", "Abort", 0, 100, self)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimumWidth(300)
+        return progress
+
     def general(self):
-        result = inference(self.general_detector,self.cvimg,is_obb=False)
+        progress = self.progress_bar()
+        result = inference(self.general_detector,self.cvimg,is_obb=False,pd=progress)
         self.parse_result(result, priority=self.general_priority)
         self.actions.verify.setEnabled(True)
 
     def ship(self):
-        result = inference(self.ship_detector, self.cvimg, is_obb=True,
+        progress = self.progress_bar()
+        result = inference(self.ship_detector, self.cvimg, is_obb=True,pd=progress,
                            crop_size=1333,sorces_th=0.7)
-        print(result)
         self.parse_result(result, priority=self.ship_priority,rbb=True)
         self.actions.verify.setEnabled(True)
 
     def plane(self):
-        result = inference(self.plane_detector, self.cvimg, is_obb=False)
+        progress = self.progress_bar()
+        result = inference(self.plane_detector, self.cvimg, is_obb=False,pd=progress)
         self.parse_result(result, priority=self.plane_priority)
         self.actions.verify.setEnabled(True)
 
     def vehicle(self):
-        result = inference(self.vehicle_detector, self.cvimg, is_obb=False)
+        progress = self.progress_bar()
+        result = inference(self.vehicle_detector, self.cvimg, is_obb=False,pd=progress)
         self.parse_result(result, priority=self.vehicle_priority)
         self.actions.verify.setEnabled(True)
 

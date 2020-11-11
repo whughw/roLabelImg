@@ -13,6 +13,7 @@ import gdal
 import argparse
 import random
 import math
+import time
 
 COLORS = {'Blue': (0, 130, 200), 'Red': (230, 25, 75), 
           'Yellow': (255, 225, 25), 'Green': (60, 180, 75), 
@@ -293,7 +294,7 @@ def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                 object_struct['score'] = score
                 all_objects.append(object_struct)
 
-def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=300,sorces_th=0.3):
+def inference(detector=None,img=None,is_obb=False,crop_size=200,crop_overlap=0,sorces_th=0.3,pd=None):
     cls_list = detector.CLASSES
     num_class = len(cls_list)
     cls_map = {}
@@ -309,13 +310,23 @@ def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=300
 
     all_objects = []
 
-    for subimage_coordinate in subimage_coordinates:
+    if pd:
+        pd_step = 100/(len(subimage_coordinates))
+
+    for id,subimage_coordinate in enumerate(subimage_coordinates):
         im = subimages[subimage_coordinate]
         det_result = inference_detector(detector, im)
         if is_obb:
             process_mask(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects)
         else:
             process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects)
+        if pd:
+            pd.setValue(pd.value() + pd_step)
+            pd.setLabelText("正在检测子图({}/{})".format(id+1,len(subimage_coordinates)))
+            if pd.wasCanceled():
+                break
+    if pd:
+        pd.setValue(100)
 
     final_objects = all_NMS(all_objects)
     return final_objects
