@@ -294,7 +294,7 @@ def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                 object_struct['score'] = score
                 all_objects.append(object_struct)
 
-def inference(detector=None,img=None,is_obb=False,crop_size=200,crop_overlap=0,sorces_th=0.3,pd=None):
+def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=0,sorces_th=0.3,pd=None):
     cls_list = detector.CLASSES
     num_class = len(cls_list)
     cls_map = {}
@@ -309,9 +309,8 @@ def inference(detector=None,img=None,is_obb=False,crop_size=200,crop_overlap=0,s
         subimage_coordinates = list(subimages.keys())
 
     all_objects = []
-
     if pd:
-        pd_step = 100/(len(subimage_coordinates))
+        pd.setMaximum(len(subimage_coordinates))
 
     for id,subimage_coordinate in enumerate(subimage_coordinates):
         im = subimages[subimage_coordinate]
@@ -321,12 +320,12 @@ def inference(detector=None,img=None,is_obb=False,crop_size=200,crop_overlap=0,s
         else:
             process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects)
         if pd:
-            pd.setValue(pd.value() + pd_step)
+            pd.setValue(id+1)
             pd.setLabelText("正在检测子图({}/{})".format(id+1,len(subimage_coordinates)))
             if pd.wasCanceled():
                 break
     if pd:
-        pd.setValue(100)
+        pd.setValue(len(subimage_coordinates))
 
     final_objects = all_NMS(all_objects)
     return final_objects

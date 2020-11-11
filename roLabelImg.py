@@ -98,6 +98,7 @@ class MainWindow(QMainWindow, WindowMixin):
         ##########init detector for object detection.###########
         self.__init_detector()
         self.cvimg = None
+        self.progress = None
 
         # Save as Pascal voc xml
         self.defaultSaveDir = None
@@ -1385,10 +1386,14 @@ class MainWindow(QMainWindow, WindowMixin):
 
     ################Defined for 503###################
     def progress_bar(self):
-        progress = QProgressDialog("正在检测子图 ...", "Abort", 0, 100, self)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimumWidth(300)
-        return progress
+        if self.progress is None:
+            progress = QProgressDialog("正在检测子图 ...", "Abort", 0, 100, self)
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumWidth(300)
+            progress.show()
+            progress.setValue(0)
+            self.progress = progress
+        return self.progress
 
     def general(self):
         progress = self.progress_bar()
