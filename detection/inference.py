@@ -271,7 +271,7 @@ def process_mask(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
 
 def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects):
     for idx_cls in range(num_class):
-        bbox_cls = det_result[0][idx_cls]
+        bbox_cls = det_result[idx_cls]
         for each_bbox in bbox_cls:
             object_struct = {}
             x1,y1,x2,y2,score = each_bbox
@@ -293,16 +293,19 @@ def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                 object_struct['score'] = score
                 all_objects.append(object_struct)
 
-def inference(detector=None,img=None,is_obb=False,crop_size=512,crop_overlap=256,sorces_th=0.3):
+def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=300,sorces_th=0.3):
     cls_list = detector.CLASSES
     num_class = len(cls_list)
     cls_map = {}
     ###generate cls_map = {"cls":int}
     for i in range(1,len(cls_list)+1):
         cls_map[cls_list[i-1]] = i
-
-    subimages = split_image(img, subsize=crop_size, gap=crop_overlap)
-    subimage_coordinates = list(subimages.keys())
+    if max(img.shape) <= crop_size:
+        subimages = {(0,0):img}
+        subimage_coordinates = [(0,0)]
+    else:
+        subimages = split_image(img, subsize=crop_size, gap=crop_overlap)
+        subimage_coordinates = list(subimages.keys())
 
     all_objects = []
 

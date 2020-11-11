@@ -43,7 +43,7 @@ from libs.ustr import ustr
 
 from detection.inference import inference
 
-__appname__ = 'roLabelImg'
+__appname__ = '遥感图像目标检测系统'
 
 # Utility functions and classes.
 
@@ -214,72 +214,72 @@ class MainWindow(QMainWindow, WindowMixin):
 
         # Actions
         action = partial(newAction, self)
-        quit = action('&Quit', self.close,
+        quit = action('退出', self.close,
                       'Ctrl+Q', 'quit', u'Quit application')
 
-        open = action('&Open', self.openFile,
+        open = action('打开文件', self.openFile,
                       'Ctrl+O', 'open', u'Open image or label file')
 
-        opendir = action('&Open Dir', self.openDir,
+        opendir = action('打开目录', self.openDir,
                          'Ctrl+u', 'open', u'Open Dir')
 
-        changeSavedir = action('&Change default saved Annotation dir', self.changeSavedir,
+        changeSavedir = action('更改自动保存目录', self.changeSavedir,
                                'Ctrl+r', 'open', u'Change default saved Annotation dir')
 
-        openAnnotation = action('&Open Annotation', self.openAnnotation,
+        openAnnotation = action('打开标注', self.openAnnotation,
                                 'Ctrl+Shift+O', 'openAnnotation', u'Open Annotation')
 
-        openNextImg = action('&Next Image', self.openNextImg,
+        openNextImg = action('下个图像', self.openNextImg,
                              'd', 'next', u'Open Next')
 
-        openPrevImg = action('&Prev Image', self.openPrevImg,
+        openPrevImg = action('上个图像', self.openPrevImg,
                              'a', 'prev', u'Open Prev')
 
-        verify = action('&Refine\nResults', self.verifyImg,
+        verify = action('结果修正', self.verifyImg,
                         None, 'refine', u'Refine Results', enabled=False)
 
-        save = action('&Save', self.saveFile,
+        save = action('保存', self.saveFile,
                       'Ctrl+S', 'save', u'Save labels to file', enabled=False)
-        saveAs = action('&Save As', self.saveFileAs,
+        saveAs = action('另存为', self.saveFileAs,
                         'Ctrl+Shift+S', 'save-as', u'Save labels to a different file',
                         enabled=False)
-        close = action('&Close', self.closeFile,
+        close = action('关闭', self.closeFile,
                        'Ctrl+W', 'close', u'Close current file')
-        color1 = action('Box &Line Color', self.chooseColor1,
+        color1 = action('边界框颜色', self.chooseColor1,
                         'Ctrl+L', 'color_line', u'Choose Box line color')
-        color2 = action('Box &Fill Color', self.chooseColor2,
+        color2 = action('填充颜色', self.chooseColor2,
                         'Ctrl+Shift+L', 'color', u'Choose Box fill color')
 
-        createMode = action('Create\nRectBox', self.setCreateMode,
+        createMode = action('创建正框', self.setCreateMode,
                             'Ctrl+N', 'new', u'Start drawing Boxs', enabled=False)
-        editMode = action('&Edit\nRectBox', self.setEditMode,
+        editMode = action('编辑正框', self.setEditMode,
                           'Ctrl+J', 'edit', u'Move and edit Boxs', enabled=False)
 
 
-        create = action('Create\nRectBox', self.createShape,
+        create = action('创建正框', self.createShape,
                         'w', 'new', u'Draw a new Box', enabled=False)
 
-        createRo = action('Create\nRotatedRBox', self.createRoShape,
+        createRo = action('创建旋转框', self.createRoShape,
                         'e', 'newRo', u'Draw a new RotatedRBox', enabled=False)
 
-        delete = action('Delete\nRectBox', self.deleteSelectedShape,
+        delete = action('删除标注', self.deleteSelectedShape,
                         'Delete', 'delete', u'Delete', enabled=False)
-        copy = action('&Duplicate\nRectBox', self.copySelectedShape,
+        copy = action('复制标注', self.copySelectedShape,
                       'Ctrl+D', 'copy', u'Create a duplicate of the selected Box',
                       enabled=False)
 
-        advancedMode = action('&Advanced Mode', self.toggleAdvancedMode,
+        advancedMode = action('高级模式', self.toggleAdvancedMode,
                               'Ctrl+Shift+A', 'expert', u'Switch to advanced mode',
                               checkable=True)
 
-        hideAll = action('&Hide\nRectBox', partial(self.togglePolygons, False),
+        hideAll = action('隐藏标注', partial(self.togglePolygons, False),
                          'Ctrl+H', 'hide', u'Hide all Boxs',
                          enabled=False)
-        showAll = action('&Show\nRectBox', partial(self.togglePolygons, True),
+        showAll = action('显示标注', partial(self.togglePolygons, True),
                          'Ctrl+A', 'hide', u'Show all Boxs',
                          enabled=False)
 
-        help = action('&Tutorial', self.tutorial, 'Ctrl+T', 'help',
+        help = action('教程', self.tutorial, 'Ctrl+T', 'help',
                       u'Show demos')
 
         zoom = QWidgetAction(self)
@@ -290,16 +290,16 @@ class MainWindow(QMainWindow, WindowMixin):
                                              fmtShortcut("Ctrl+Wheel")))
         self.zoomWidget.setEnabled(False)
 
-        zoomIn = action('Zoom &In', partial(self.addZoom, 10),
+        zoomIn = action('放大', partial(self.addZoom, 10),
                         'Ctrl++', 'zoom-in', u'Increase zoom level', enabled=False)
-        zoomOut = action('&Zoom Out', partial(self.addZoom, -10),
+        zoomOut = action('缩小', partial(self.addZoom, -10),
                          'Ctrl+-', 'zoom-out', u'Decrease zoom level', enabled=False)
-        zoomOrg = action('&Original size', partial(self.setZoom, 100),
+        zoomOrg = action('原始大小', partial(self.setZoom, 100),
                          'Ctrl+=', 'zoom', u'Zoom to original size', enabled=False)
-        fitWindow = action('&Fit Window', self.setFitWindow,
+        fitWindow = action('适应窗口', self.setFitWindow,
                            'Ctrl+F', 'fit-window', u'Zoom follows window size',
                            checkable=True, enabled=False)
-        fitWidth = action('Fit &Width', self.setFitWidth,
+        fitWidth = action('适应宽度', self.setFitWidth,
                           'Ctrl+Shift+F', 'fit-width', u'Zoom follows window width',
                           checkable=True, enabled=False)
         # Group zoom controls into a list for easier toggling.
@@ -313,15 +313,15 @@ class MainWindow(QMainWindow, WindowMixin):
             self.MANUAL_ZOOM: lambda: 1,
         }
 
-        edit = action('&Edit Label', self.editLabel,
+        edit = action('&编辑标签', self.editLabel,
                       'Ctrl+E', 'edit', u'Modify the label of the selected Box',
                       enabled=False)
         self.editButton.setDefaultAction(edit)
 
-        shapeLineColor = action('Shape &Line Color', self.chshapeLineColor,
+        shapeLineColor = action('多边形边界颜色', self.chshapeLineColor,
                                 icon='color_line', tip=u'Change the line color for this specific shape',
                                 enabled=False)
-        shapeFillColor = action('Shape &Fill Color', self.chshapeFillColor,
+        shapeFillColor = action('多边形填充颜色', self.chshapeFillColor,
                                 icon='color', tip=u'Change the fill color for this specific shape',
                                 enabled=False)
 
@@ -337,13 +337,13 @@ class MainWindow(QMainWindow, WindowMixin):
             self.popLabelListMenu)
 
         ############object detection actions#############
-        general_detection = action('General\nDetection', self.general,
+        general_detection = action('通用\n目标检测', self.general,
                                    None, 'general', u'General Detection', enabled=False)
-        ship_detection = action('Ship\nDetection', self.ship,
+        ship_detection = action('舰船检测', self.ship,
                                 None, 'ship', u'Ship Detection', enabled=False)
-        plane_detection = action('Plane\nDetection', self.plane,
+        plane_detection = action('飞机检测', self.plane,
                                 None, 'plane', u'Plane Detection', enabled=False)
-        vehicle_detection = action('Vehicle\nDetection', self.vehicle,
+        vehicle_detection = action('车辆检测', self.vehicle,
                                  None, 'vehicle', u'Vehicle Detection', enabled=False)
 
         # Store actions for further handling.
@@ -547,6 +547,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self.dirty = True
         self.canvas.verified = False
         self.actions.save.setEnabled(True)
+        self.actions.verify.setEnabled(True)
 
     def setClean(self):
         self.dirty = False
@@ -1383,53 +1384,136 @@ class MainWindow(QMainWindow, WindowMixin):
     ################Defined for 503###################
     def general(self):
         result = inference(self.general_detector,self.cvimg,is_obb=False)
-        self.parse_result(result)
+        self.parse_result(result, priority=self.general_priority)
         self.actions.verify.setEnabled(True)
 
     def ship(self):
-        result = inference(self.ship_detector, self.cvimg, is_obb=False)
-        self.parse_result(result)
+        result = inference(self.ship_detector, self.cvimg, is_obb=True,
+                           crop_size=1333,sorces_th=0.7)
+        print(result)
+        self.parse_result(result, priority=self.ship_priority,rbb=True)
         self.actions.verify.setEnabled(True)
 
     def plane(self):
         result = inference(self.plane_detector, self.cvimg, is_obb=False)
-        self.parse_result(result)
+        self.parse_result(result, priority=self.plane_priority)
         self.actions.verify.setEnabled(True)
 
     def vehicle(self):
         result = inference(self.vehicle_detector, self.cvimg, is_obb=False)
-        self.parse_result(result)
+        self.parse_result(result, priority=self.vehicle_priority)
         self.actions.verify.setEnabled(True)
 
     def verifyImg(self, _value=False):
-        self.actions.verify.setEnabled(False)
-        print("refine results")
+        label_list = []
+        for shape in self.shapesToItems.keys():
+            label_list.append(shape)
+        for shape in label_list:
+            self.remLabel(shape)
+        new_object = self.all_NMS(label_list)
+        for s in new_object:
+            self.addLabel(s)
+        self.canvas.loadShapes(new_object)
+        self.setDirty()
+
+    def all_NMS(self,all_objects):
+        def box_iou(bbox1, bbox2):
+
+            area1 = box_area(bbox1)
+            area2 = box_area(bbox2)
+
+            lt_x, lt_y = max(bbox1[0], bbox2[0]), max(bbox1[1], bbox2[1])
+            rb_x, rb_y = min(bbox1[2], bbox2[2]), min(bbox1[3], bbox2[3])
+            if rb_x - lt_x > 0 and rb_y - lt_y > 0:
+                inter = (lt_x - rb_x) * (lt_y - rb_y)
+            else:
+                inter = 0
+            iou = inter / (area1 + area2 - inter)
+            return iou, inter, area1, area2
+
+        def box_area(bbox):
+            return (bbox[2] - bbox[0]) * (bbox[3] - bbox[1])
+
+        iou_th = 0.4
+        tmp_objects = []
+        re_idx = []
+        num = len(all_objects)
+        for idx, obj in enumerate(all_objects):
+            if idx in re_idx:
+                continue
+            obj1_x_list = [pt.x() for pt in obj.points]
+            obj1_y_list = [pt.y() for pt in obj.points]
+            bbox1 = [min(obj1_x_list),min(obj1_y_list),max(obj1_x_list),max(obj1_y_list)]
+            score1 = obj.score
+
+            for idx_c in range(idx + 1, num):
+                if idx_c in re_idx:
+                    continue
+                obj_c = all_objects[idx_c]
+                obj2_x_list = [pt.x() for pt in obj_c.points]
+                obj2_y_list = [pt.y() for pt in obj_c.points]
+                bbox2 = [min(obj2_x_list), min(obj2_y_list), max(obj2_x_list), max(obj2_y_list)]
+                score2 = obj_c.score
+                iou, inter, area1, area2 = box_iou(bbox1, bbox2)
+                if iou > iou_th:
+                    id_m = idx if score1 < score2 else idx_c
+                    re_idx.append(id_m)
+                elif inter == area1 or inter == area2:
+                    id_m = idx if score1 < score2 else idx_c
+                    re_idx.append(id_m)
+            if idx not in re_idx:
+                tmp_objects.append(obj)
+
+        return tmp_objects
 
     def __init_detector(self):
+        self.general_priority = 0
+        self.ship_priority = 1
+        self.plane_priority = 1
+        self.vehicle_priority = 1
         print("[1/4]Initializing General Detection model...")
         self.general_detector = init_detector("detection/model/general/config.py",
                                               "detection/model/general/model.pth")
         print("[2/4]Initializing Ship Detection model...")
         self.ship_detector = init_detector("detection/model/ship/config.py",
                                            "detection/model/ship/model.pth")
-        print("[3/4]Initializing Plane Detection model...")
-        self.plane_detector = init_detector("detection/model/plane/config.py",
-                                            "detection/model/plane/model.pth")
-        print("[4/4]Initializing Vehicle Detection model...")
-        self.vehicle_detector = init_detector("detection/model/vehicle/config.py",
-                                              "detection/model/vehicle/model.pth")
+        # print("[3/4]Initializing Plane Detection model...")
+        # self.plane_detector = init_detector("detection/model/plane/config.py",
+        #                                     "detection/model/plane/model.pth")
+        # print("[4/4]Initializing Vehicle Detection model...")
+        # self.vehicle_detector = init_detector("detection/model/vehicle/config.py",
+        #                                       "detection/model/vehicle/model.pth")
 
-    def parse_result(self,result):
+    def parse_result(self,result,priority=0,rbb=False):
         s = []
         for obj in result:
             label = obj["label"]
-            shape = Shape(label=label)
-            xmin, ymin, xmax, ymax = obj["bbox"]
-            points = [[xmin,ymin],[xmax,ymin],[xmax,ymax],[xmin,ymax]]
-            for x, y in points:
-                shape.addPoint(QPointF(x, y))
+            if priority > 0:
+                score = obj["score"]
+            else:
+                score = 0
+            shape = Shape(label=label,score=score)
+            if not rbb:
+                xmin, ymin, xmax, ymax = obj["bbox"]
+                points = [[xmin,ymin],[xmax,ymin],[xmax,ymax],[xmin,ymax]]
+                for x, y in points:
+                    shape.addPoint(QPointF(x, y))
+            else:
+                rbbox = obj["rbbox"]
+                cx = rbbox[0]
+                cy = rbbox[1]
+                w = rbbox[2]
+                h = rbbox[3]
+                xmin = cx - w/2
+                ymin = cy - h/2
+                xmax = cx + w / 2
+                ymax = cy + h / 2
+                shape.center = QPointF(cx, cy)
+                points = [[xmin,ymin],[xmax,ymin],[xmax,ymax],[xmin,ymax]]
+                for x, y in points:
+                    shape.addPoint(QPointF(x, y))
+                shape.rotate(-1 * obj["rbbox"][-1]) #anti clockwise
             shape.difficult = False
-            shape.direction = obj["rbbox"][-1]
             shape.isRotated = True
             shape.close()
             s.append(shape)
@@ -1439,7 +1523,7 @@ class MainWindow(QMainWindow, WindowMixin):
             # if fill_color:
             #     shape.fill_color = QColor(*fill_color)
 
-        self.canvas.loadShapes(s)
+        self.canvas.loadShapes(self.shapesToItems.keys())
         self.setDirty()
 
 
