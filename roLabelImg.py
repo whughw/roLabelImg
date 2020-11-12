@@ -1448,26 +1448,28 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def general(self):
         progress = self.progress_bar()
-        result = inference(self.general_detector,self.cvimg,is_obb=False,pd=progress)
+        result = inference(self.general_detector,self.cvimg,is_rbb=False,pd=progress)
         self.parse_result(result, priority=self.general_priority)
         self.actions.verify.setEnabled(True)
 
     def ship(self):
         progress = self.progress_bar()
-        result = inference(self.ship_detector, self.cvimg, is_obb=True,pd=progress,
-                           crop_size=1333,sorces_th=0.7)
+        result = inference(self.ship_detector, self.cvimg, is_rbb=True,pd=progress,
+                           crop_size=1000,crop_overlap=500,score_th=0.7)
         self.parse_result(result, priority=self.ship_priority,rbb=True)
         self.actions.verify.setEnabled(True)
 
     def plane(self):
         progress = self.progress_bar()
-        result = inference(self.plane_detector, self.cvimg, is_obb=False,pd=progress)
-        self.parse_result(result, priority=self.plane_priority)
+        result = inference(self.plane_detector, self.cvimg, is_rbb=True,pd=progress,
+                           crop_size=1800,crop_overlap=512,score_th=0.2)
+        self.parse_result(result, priority=self.plane_priority,rbb=True)
         self.actions.verify.setEnabled(True)
 
     def vehicle(self):
         progress = self.progress_bar()
-        result = inference(self.vehicle_detector, self.cvimg, is_obb=False,pd=progress)
+        result = inference(self.vehicle_detector, self.cvimg, is_rbb=False,pd=progress,
+                           crop_size=512,crop_overlap=64,score_th=0.3)
         self.parse_result(result, priority=self.vehicle_priority)
         self.actions.verify.setEnabled(True)
 
@@ -1549,9 +1551,9 @@ class MainWindow(QMainWindow, WindowMixin):
                                            "detection/model/ship/model.pth")
         if self.ship_detector:
             self.detector_list.append(self.ship_detector)
-        # print("[3/4]Initializing Plane Detection model...")
-        # self.plane_detector = init_detector("detection/model/plane/config.py",
-        #                                     "detection/model/plane/model.pth")
+        print("[3/4]Initializing Plane Detection model...")
+        self.plane_detector = init_detector("detection/model/plane/config.py",
+                                            "detection/model/plane/model.pth")
         if self.plane_detector:
             self.detector_list.append(self.plane_detector)
         print("[4/4]Initializing Vehicle Detection model...")

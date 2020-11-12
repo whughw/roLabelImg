@@ -241,7 +241,7 @@ def simple_obb_txt_dump(objects, img_name, save_dir):
         pointres = str(pointobbs[idx][0]) + ' ' + str(pointobbs[idx][1]) + ' ' + str(pointobbs[idx][2]) + ' ' + str(pointobbs[idx][3]) + ' ' + str(pointobbs[idx][4]) + ' ' + str(pointobbs[idx][5]) + ' ' + str(pointobbs[idx][6]) + ' ' + str(pointobbs[idx][7])
         txt_file.write(name + ' ' + sco + ' ' + pointres + '\n')
     
-def process_mask(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects):
+def process_mask(det_result,num_class,score_th,cls_map,subimage_coordinate,all_objects):
     for idx_cls in range(num_class):
         mask_cls = det_result[1][idx_cls]
         obbox_cls = det_result[0][idx_cls]
@@ -262,7 +262,7 @@ def process_mask(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                         pointobb[5] + subimage_coordinate[1],
                         pointobb[6] + subimage_coordinate[0],
                         pointobb[7] + subimage_coordinate[1]]
-            if score > sorces_th:
+            if score > score_th:
                 object_struct['bbox'] = bbox
                 object_struct['rbbox'] = thetaobb
                 object_struct['pointobbs'] = pointobb
@@ -270,7 +270,7 @@ def process_mask(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                 object_struct['score'] = score
                 all_objects.append(object_struct)
 
-def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects):
+def process_bbox(det_result,num_class,score_th,cls_map,subimage_coordinate,all_objects):
     for idx_cls in range(num_class):
         bbox_cls = det_result[idx_cls]
         for each_bbox in bbox_cls:
@@ -286,7 +286,7 @@ def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                 0,  #theta
             ]
             pointobb = thetaobb2pointobb(thetaobb)
-            if score > sorces_th:
+            if score > score_th:
                 object_struct['bbox'] = bbox
                 object_struct['rbbox'] = thetaobb
                 object_struct['pointobbs'] = pointobb
@@ -294,7 +294,7 @@ def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                 object_struct['score'] = score
                 all_objects.append(object_struct)
 
-def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=200,sorces_th=0.3,pd=None):
+def inference(detector=None,img=None,is_rbb=False,crop_size=800,crop_overlap=200,score_th=0.3,pd=None):
     cls_list = detector.CLASSES
     num_class = len(cls_list)
     cls_map = {}
@@ -316,10 +316,10 @@ def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=200
         tic = time.time()
         im = subimages[subimage_coordinate]
         det_result = inference_detector(detector, im)
-        if is_obb:
-            process_mask(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects)
+        if is_rbb:
+            process_mask(det_result,num_class,score_th,cls_map,subimage_coordinate,all_objects)
         else:
-            process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects)
+            process_bbox(det_result,num_class,score_th,cls_map,subimage_coordinate,all_objects)
         toc = time.time()
         if pd:
             pd.setValue(id+1)
