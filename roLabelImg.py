@@ -1456,21 +1456,21 @@ class MainWindow(QMainWindow, WindowMixin):
         progress = self.progress_bar()
         result = inference(self.ship_detector, self.cvimg, is_rbb=True,pd=progress,
                            crop_size=1000,crop_overlap=500,score_th=0.7)
-        self.parse_result(result, priority=self.ship_priority,rbb=True)
+        self.parse_result(result, priority=self.ship_priority,rbb=True,scale=0.25)
         self.actions.verify.setEnabled(True)
 
     def plane(self):
         progress = self.progress_bar()
         result = inference(self.plane_detector, self.cvimg, is_rbb=True,pd=progress,
                            crop_size=1800,crop_overlap=512,score_th=0.2)
-        self.parse_result(result, priority=self.plane_priority,rbb=True)
+        self.parse_result(result, priority=self.plane_priority,rbb=True,scale=0.25)
         self.actions.verify.setEnabled(True)
 
     def vehicle(self):
         progress = self.progress_bar()
         result = inference(self.vehicle_detector, self.cvimg, is_rbb=False,pd=progress,
                            crop_size=512,crop_overlap=64,score_th=0.3)
-        self.parse_result(result, priority=self.vehicle_priority)
+        self.parse_result(result, priority=self.vehicle_priority,scale=2)
         self.actions.verify.setEnabled(True)
 
     def verifyImg(self, _value=False):
@@ -1570,7 +1570,7 @@ class MainWindow(QMainWindow, WindowMixin):
         b = int((hashCode / 16581375) % 255)
         return QColor(r, g, b, 128)
 
-    def parse_result(self,result,priority=0,rbb=False):
+    def parse_result(self,result,priority=0,rbb=False,scale=1.0):
         s = []
         for obj in result:
             label = obj["label"]
@@ -1578,7 +1578,7 @@ class MainWindow(QMainWindow, WindowMixin):
                 score = obj["score"]
             else:
                 score = 0
-            shape = Shape(label=label,score=score)
+            shape = Shape(label=label,score=score,scale=scale)
             if not rbb:
                 xmin, ymin, xmax, ymax = obj["bbox"]
                 points = [[xmin,ymin],[xmax,ymin],[xmax,ymax],[xmin,ymax]]

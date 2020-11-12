@@ -35,9 +35,10 @@ class Shape(object):
     hvertex_fill_color = DEFAULT_HVERTEX_FILL_COLOR
     point_type = P_ROUND
     point_size = 8
-    scale = 1.0
+    scale = 1
 
-    def __init__(self, label=None, line_color=None,difficult = False, score = 0):
+    def __init__(self, label=None, line_color=None,difficult = False, score = 0, scale = 1.0):
+        self.scale = scale
         self.label = label
         self.points = []
         self.fill = False
