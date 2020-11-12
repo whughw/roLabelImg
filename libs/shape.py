@@ -47,7 +47,8 @@ class Shape(object):
 
         self.direction = 0  # added by hy
         self.center = None # added by hy
-        self.isRotated = True 
+        self.isRotated = True
+        self.hvertex_fill_color = None
 
         self._highlightIndex = None
         self._highlightMode = self.NEAR_VERTEX
@@ -173,6 +174,8 @@ class Shape(object):
             d *= size
         if self._highlightIndex is not None:
             self.vertex_fill_color = self.hvertex_fill_color
+        elif self.vertex_fill_color is not None:
+            self.hvertex_fill_color = self.vertex_fill_color
         else:
             self.vertex_fill_color = Shape.vertex_fill_color
         if shape == self.P_SQUARE:

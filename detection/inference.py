@@ -294,7 +294,7 @@ def process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_
                 object_struct['score'] = score
                 all_objects.append(object_struct)
 
-def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=0,sorces_th=0.3,pd=None):
+def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=200,sorces_th=0.3,pd=None):
     cls_list = detector.CLASSES
     num_class = len(cls_list)
     cls_map = {}
@@ -313,15 +313,18 @@ def inference(detector=None,img=None,is_obb=False,crop_size=800,crop_overlap=0,s
         pd.setMaximum(len(subimage_coordinates))
 
     for id,subimage_coordinate in enumerate(subimage_coordinates):
+        tic = time.time()
         im = subimages[subimage_coordinate]
         det_result = inference_detector(detector, im)
         if is_obb:
             process_mask(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects)
         else:
             process_bbox(det_result,num_class,sorces_th,cls_map,subimage_coordinate,all_objects)
+        toc = time.time()
         if pd:
             pd.setValue(id+1)
-            pd.setLabelText("正在检测子图({}/{})".format(id+1,len(subimage_coordinates)))
+            pd.setLabelText("正在检测子图({}/{})\n预计还需{}秒".format(id+1,len(subimage_coordinates),
+                                                            int((len(subimage_coordinates) - id - 1) * (toc - tic))+1))
             if pd.wasCanceled():
                 break
     if pd:

@@ -18,6 +18,7 @@ import numpy as np
 import gdal
 import qimage2ndarray
 import time
+import hashlib
 
 try:
     from mmdet.apis import init_detector
@@ -45,10 +46,9 @@ from libs.ustr import ustr
 
 from detection.inference import inference
 
-__appname__ = '遥感图像目标检测系统'
+__appname__ = '遥感影像目标检测系统'
 
 # Utility functions and classes.
-
 
 def have_qstring():
     '''p3/qt5 get rid of QString wrapper as py3 has native unicode str type'''
@@ -96,9 +96,14 @@ class MainWindow(QMainWindow, WindowMixin):
         self.setWindowTitle(__appname__)
 
         ##########init detector for object detection.###########
+        self.general_detector = None
+        self.ship_detector = None
+        self.plane_detector = None
+        self.vehicle_detector = None
         self.__init_detector()
         self.cvimg = None
         self.progress = None
+
 
         # Save as Pascal voc xml
         self.defaultSaveDir = None
@@ -120,8 +125,7 @@ class MainWindow(QMainWindow, WindowMixin):
         self._noSelectionSlot = False
         self._beginner = True
         self.screencastViewer = "firefox"
-        self.screencast = "https://youtu.be/7D5lvol_QRA"
-        # For a demo of original labelImg, please see "https://youtu.be/p0nR2YsCY_U"
+        self.screencast = "https://www.baidu.com"
 
         # Main widgets and related state.
         self.labelDialog = LabelDialog(parent=self, listItem=self.labelHist)
@@ -1483,6 +1487,7 @@ class MainWindow(QMainWindow, WindowMixin):
         return tmp_objects
 
     def __init_detector(self):
+        self.detector_list = []
         self.general_priority = 0
         self.ship_priority = 1
         self.plane_priority = 1
@@ -1490,15 +1495,31 @@ class MainWindow(QMainWindow, WindowMixin):
         print("[1/4]Initializing General Detection model...")
         self.general_detector = init_detector("detection/model/general/config.py",
                                               "detection/model/general/model.pth")
+        if self.general_detector:
+            self.detector_list.append(self.general_detector)
         print("[2/4]Initializing Ship Detection model...")
         self.ship_detector = init_detector("detection/model/ship/config.py",
                                            "detection/model/ship/model.pth")
+        if self.ship_detector:
+            self.detector_list.append(self.ship_detector)
         # print("[3/4]Initializing Plane Detection model...")
         # self.plane_detector = init_detector("detection/model/plane/config.py",
         #                                     "detection/model/plane/model.pth")
-        # print("[4/4]Initializing Vehicle Detection model...")
-        # self.vehicle_detector = init_detector("detection/model/vehicle/config.py",
-        #                                       "detection/model/vehicle/model.pth")
+        if self.plane_detector:
+            self.detector_list.append(self.plane_detector)
+        print("[4/4]Initializing Vehicle Detection model...")
+        self.vehicle_detector = init_detector("detection/model/vehicle/config.py",
+                                              "detection/model/vehicle/model.pth")
+        if self.vehicle_detector:
+            self.detector_list.append(self.vehicle_detector)
+
+    def generateColorByText(self,text):
+        s = ustr(text)
+        hashCode = int(hashlib.sha256(s.encode('utf-8')).hexdigest(), 16)
+        r = int((hashCode / 255) % 255)
+        g = int((hashCode / 65025) % 255)
+        b = int((hashCode / 16581375) % 255)
+        return QColor(r, g, b, 128)
 
     def parse_result(self,result,priority=0,rbb=False):
         s = []
@@ -1531,14 +1552,15 @@ class MainWindow(QMainWindow, WindowMixin):
                 shape.rotate(-1 * obj["rbbox"][-1]) #anti clockwise
             shape.difficult = False
             shape.isRotated = True
+            try:
+                shape.line_color = self.generateColorByText(shape.label)
+                #shape.vertex_fill_color = self.generateColorByText(shape.label)
+                shape.fill_color = self.generateColorByText(shape.label)
+            except:
+                pass
             shape.close()
             s.append(shape)
             self.addLabel(shape)
-            # if line_color:
-            #     shape.line_color = QColor(*line_color)
-            # if fill_color:
-            #     shape.fill_color = QColor(*fill_color)
-
         self.canvas.loadShapes(self.shapesToItems.keys())
         self.setDirty()
 
