@@ -86,7 +86,7 @@ Ubuntu Linux
 .. code::
 
     # Make sure you have installed mmdetection first.
-    conda install pyqt=5
+    pip install pyqt5
     make all
     ./roLabelImg.py
     ./roLabelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
@@ -108,7 +108,7 @@ Windows
 .. code::
 
     # Make sure you have installed mmdetection first.
-    conda install pyqt=5
+    pip install pyqt5
     pyrcc5 -o resources.py resources.qrc
     python roLabelImg.py
     python roLabelImg.py [IMAGE_PATH] [PRE-DEFINED CLASS FILE]
